@@ -69,6 +69,7 @@ services:
       - VIEW_DISTANCE=30
       - WHITE_LIST=true
     restart: unless-stopped
+    pull_policy: always
     stdin_open: true
     tty: true
 
