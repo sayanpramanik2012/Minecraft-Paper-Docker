@@ -22,7 +22,7 @@ A Dockerized Minecraft Paper server setup that automatically fetches the latest 
 1. Clone this repository:
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/sayanpramanik2012/Minecraft-Paper-Docker
 cd minecraft-paper-docker
 ```
 
