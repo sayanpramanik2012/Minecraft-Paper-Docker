@@ -1,5 +1,24 @@
 # Minecraft Paper Server Docker
 
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Quick Start with Docker Compose](#quick-start-with-docker-compose)
+- [Configuration](#configuration)
+  - [Memory Settings](#memory-settings)
+  - [Server Properties](#server-properties)
+- [Directory Structure](#directory-structure)
+- [How It Works](#how-it-works)
+- [Updating](#updating)
+- [Backup and Restore](#backup-and-restore)
+  - [Backup](#backup)
+  - [Restore](#restore)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+
 A Dockerized Minecraft Paper server setup that automatically fetches the latest version and provides easy configuration through environment variables.
 
 ## Features
@@ -37,6 +56,16 @@ mkdir -p minecraft-docker-paper/{world,world_nether,world_the_end,plugins}
 ```bash
 docker compose up -d
 ```
+
+## Quick Start with Docker Compose
+
+The easiest way to run this Minecraft Paper server is using Docker Compose. Simply:
+
+1. Copy the `docker-compose.yml` file from this repository
+2. Run `docker-compose up -d` to start the server
+3. The server will automatically download the latest stable version of Paper
+
+The server will be accessible on port 25565 by default. You can modify the port and other settings in the `docker-compose.yml` file.
 
 ## Configuration
 
