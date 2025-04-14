@@ -22,10 +22,14 @@ EXPOSE 25565
 # Configure JVM settings and start command
 ENV JAVA_OPTS="-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true"
 
+# Set default memory values if not provided
+ENV JAVA_MEMORY_MIN="1G"
+ENV JAVA_MEMORY_MAX="4G"
+
 # Add healthcheck to verify server is running
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD nc -z localhost 25565 || exit 1
 
 # Start the Minecraft server
-CMD java $JAVA_OPTS -jar paper.jar nogui
+CMD java -Xms${JAVA_MEMORY_MIN} -Xmx${JAVA_MEMORY_MAX} $JAVA_OPTS -jar paper.jar nogui
 
