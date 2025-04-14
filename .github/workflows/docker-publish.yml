@@ -1,0 +1,59 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get Paper version
+        id: paper_version
+        run: |
+          PAPER_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.versions[-1]')
+          echo "PAPER_VERSION=$PAPER_VERSION" >> $GITHUB_ENV
+
+      - name: Get existing tags
+        id: get_tags
+        run: |
+          TAGS=$(curl -s "https://hub.docker.com/v2/repositories/sayanpramanik/minecraft-paper/tags?page_size=100" | jq -r '.results[].name')
+          echo "TAGS=$TAGS" >> $GITHUB_ENV
+
+      - name: Determine version number
+        id: version_number
+        run: |
+          VERSION_SUFFIX=1
+          while [[ $TAGS == *"$PAPER_VERSION-v$VERSION_SUFFIX"* ]]; do
+            VERSION_SUFFIX=$((VERSION_SUFFIX + 1))
+          done
+          echo "VERSION_SUFFIX=$VERSION_SUFFIX" >> $GITHUB_ENV
+          echo "FULL_VERSION=$PAPER_VERSION-v$VERSION_SUFFIX" >> $GITHUB_ENV
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            sayanpramanik/minecraft-paper:${{ env.FULL_VERSION }}
+            sayanpramanik/minecraft-paper:latest
