@@ -6,12 +6,6 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create a dedicated user for running the server
-RUN groupadd -r minecraft && \
-    useradd -r -g minecraft -d /data -s /bin/bash minecraft && \
-    mkdir -p /data && \
-    chown -R minecraft:minecraft /data
-
 WORKDIR /data
 
 # Get the latest version and build number
@@ -21,12 +15,6 @@ RUN LATEST_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.
 
 # Set eula.txt
 RUN echo "eula=true" > eula.txt
-
-# Fix permissions
-RUN chown -R minecraft:minecraft /data
-
-# Switch to the minecraft user
-USER minecraft
 
 # Expose Minecraft server port (internal container port)
 EXPOSE 25565
