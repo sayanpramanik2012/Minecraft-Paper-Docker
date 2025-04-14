@@ -5,6 +5,13 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Paper version to build (leave empty for latest stable)"
+        required: false
+        type: string
+        default: ""
 
 env:
   REGISTRY: docker.io
@@ -24,8 +31,12 @@ jobs:
       - name: Get Paper version
         id: paper_version
         run: |
-          # Get all versions and filter out beta/RC versions
-          PAPER_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.versions[] | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))' | sort -V | tail -n 1)
+          # Use provided version or get latest stable
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            PAPER_VERSION="${{ github.event.inputs.version }}"
+          else
+            PAPER_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.versions[] | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))' | sort -V | tail -n 1)
+          fi
           echo "PAPER_VERSION=$PAPER_VERSION" >> $GITHUB_ENV
 
       - name: Get existing tags
