@@ -7,14 +7,7 @@ services:
     ports:
       # Format: "HOST_PORT:CONTAINER_PORT"
       - "2515:25565"
-    volumes:
-      # Mount only worlds and plugins
-      - ./minecraft-docker-paper/world:/data/world
-      - ./minecraft-docker-paper/world_nether:/data/world_nether
-      - ./minecraft-docker-paper/world_the_end:/data/world_the_end
-      - ./minecraft-docker-paper/plugins:/data/plugins
     environment:
-      # Java memory settings
       - JAVA_MEMORY_MIN=1G
       - JAVA_MEMORY_MAX=1G
       # Server settings from server.properties
@@ -68,11 +61,9 @@ services:
       - USE_NATIVE_TRANSPORT=true
       - VIEW_DISTANCE=30
       - WHITE_LIST=true
+    volumes:
+      - ./minecraft-docker-paper/world:/minecraft/server/world
+      - ./minecraft-docker-paper/world_nether:/minecraft/server/world_nether
+      - ./minecraft-docker-paper/world_the_end:/minecraft/server/world_the_end
+      - ./minecraft-docker-paper/plugins:/minecraft/server/plugins
     restart: unless-stopped
-    pull_policy: always
-    stdin_open: true
-    tty: true
-
-volumes:
-  minecraft-docker-paper:
-    driver: local
