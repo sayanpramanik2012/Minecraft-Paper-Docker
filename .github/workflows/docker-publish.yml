@@ -54,13 +54,14 @@ jobs:
           if [ -z "$TAGS" ]; then
             VERSION_SUFFIX=1
           else
-            # Extract the highest version number and increment
-            VERSION_SUFFIX=$(echo "$TAGS" | tr ',' '\n' | grep -o "v[0-9]*$" | sed 's/v//' | sort -n | tail -n 1)
+            # Extract all version numbers, sort them numerically, and get the highest
+            VERSION_SUFFIX=$(echo "$TAGS" | tr ',' '\n' | grep -o "v[0-9]*$" | sed 's/v//' | sort -V | tail -n 1)
             # Ensure we have a valid number
             if [ -z "$VERSION_SUFFIX" ]; then
               VERSION_SUFFIX=1
             else
-              VERSION_SUFFIX=$((VERSION_SUFFIX + 1))
+              # Convert to integer and increment
+              VERSION_SUFFIX=$((10#$VERSION_SUFFIX + 1))
             fi
           fi
           echo "VERSION_SUFFIX=${VERSION_SUFFIX}" >> $GITHUB_ENV
