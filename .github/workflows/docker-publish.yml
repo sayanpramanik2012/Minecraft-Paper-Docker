@@ -56,7 +56,12 @@ jobs:
           else
             # Extract the highest version number and increment
             VERSION_SUFFIX=$(echo "$TAGS" | tr ',' '\n' | grep -o "v[0-9]*$" | sed 's/v//' | sort -n | tail -n 1)
-            VERSION_SUFFIX=$((VERSION_SUFFIX + 1))
+            # Ensure we have a valid number
+            if [ -z "$VERSION_SUFFIX" ]; then
+              VERSION_SUFFIX=1
+            else
+              VERSION_SUFFIX=$((VERSION_SUFFIX + 1))
+            fi
           fi
           echo "VERSION_SUFFIX=${VERSION_SUFFIX}" >> $GITHUB_ENV
           echo "FULL_VERSION=${PAPER_VERSION}-v${VERSION_SUFFIX}" >> $GITHUB_ENV
