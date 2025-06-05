@@ -12,48 +12,85 @@ RUN PAPER_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.v
 
 RUN echo "eula=true" > eula.txt
 
-# Create improved script to generate server.properties
+# Create startup script that handles server.properties properly
 RUN echo '#!/bin/bash\n\
-echo "# Generated server.properties from environment variables" > server.properties\n\
+set -e\n\
 \n\
-# List of environment variables to exclude (Docker/Java specific)\n\
-EXCLUDE_VARS="JAVA_OPTS JAVA_MEMORY_MIN JAVA_MEMORY_MAX PATH HOSTNAME PWD HOME TERM SHLVL"\n\
-\n\
-# Function to check if variable should be excluded\n\
-should_exclude() {\n\
-    local var_name="$1"\n\
-    for exclude in $EXCLUDE_VARS; do\n\
-        if [[ "$var_name" == "$exclude" ]]; then\n\
-            return 0\n\
+# Function to update server.properties\n\
+update_server_properties() {\n\
+    echo "Updating server.properties with environment variables..."\n\
+    \n\
+    # List of environment variables to exclude\n\
+    EXCLUDE_VARS="JAVA_OPTS JAVA_MEMORY_MIN JAVA_MEMORY_MAX PATH HOSTNAME PWD HOME TERM SHLVL"\n\
+    \n\
+    # Create a temporary properties file\n\
+    temp_props="/tmp/server.properties.tmp"\n\
+    \n\
+    # If server.properties exists, use it as base, otherwise create empty\n\
+    if [ -f "server.properties" ]; then\n\
+        cp server.properties "$temp_props"\n\
+    else\n\
+        touch "$temp_props"\n\
+    fi\n\
+    \n\
+    # Process environment variables\n\
+    env | while IFS="=" read -r key value; do\n\
+        # Skip empty lines and malformed entries\n\
+        [[ -z "$key" ]] && continue\n\
+        \n\
+        # Skip excluded variables\n\
+        skip=false\n\
+        for exclude in $EXCLUDE_VARS; do\n\
+            if [[ "$key" == "$exclude" ]]; then\n\
+                skip=true\n\
+                break\n\
+            fi\n\
+        done\n\
+        \n\
+        # Skip Docker/system variables\n\
+        if [[ "$key" =~ ^_ ]] || [[ "$key" =~ ^DOCKER ]] || [[ "$key" =~ ^CONTAINER ]]; then\n\
+            skip=true\n\
+        fi\n\
+        \n\
+        if [ "$skip" = true ]; then\n\
+            continue\n\
+        fi\n\
+        \n\
+        # Convert to lowercase with hyphens\n\
+        property_key=$(echo "$key" | tr "[:upper:]" "[:lower:]" | tr "_" "-")\n\
+        \n\
+        # Update or add the property\n\
+        if grep -q "^${property_key}=" "$temp_props"; then\n\
+            # Property exists, update it\n\
+            sed -i "s/^${property_key}=.*/${property_key}=${value}/" "$temp_props"\n\
+            echo "Updated: ${property_key}=${value}"\n\
+        else\n\
+            # Property does not exist, add it\n\
+            echo "${property_key}=${value}" >> "$temp_props"\n\
+            echo "Added: ${property_key}=${value}"\n\
         fi\n\
     done\n\
-    # Exclude variables that start with underscore or contain common Docker/system prefixes\n\
-    if [[ "$var_name" =~ ^_ ]] || [[ "$var_name" =~ ^DOCKER ]] || [[ "$var_name" =~ ^CONTAINER ]]; then\n\
-        return 0\n\
-    fi\n\
-    return 1\n\
+    \n\
+    # Replace the original file\n\
+    mv "$temp_props" "server.properties"\n\
+    echo "server.properties updated successfully"\n\
 }\n\
 \n\
-# Process environment variables\n\
-env | while IFS="=" read -r key value; do\n\
-    # Skip empty lines and malformed entries\n\
-    [[ -z "$key" ]] && continue\n\
-    \n\
-    # Skip excluded variables\n\
-    if should_exclude "$key"; then\n\
-        echo "Skipping excluded variable: $key"\n\
-        continue\n\
-    fi\n\
-    \n\
-    # Convert to lowercase and write to properties file\n\
-    property_key=$(echo "$key" | tr "[:upper:]" "[:lower:]" | tr "_" "-")\n\
-    echo "Setting property: $property_key=$value"\n\
-    echo "$property_key=$value" >> server.properties\n\
-done\n\
+# First, start the server briefly to generate default files\n\
+echo "Generating default server files..."\n\
+timeout 30s java -Xms512M -Xmx512M -jar paper.jar nogui || true\n\
 \n\
-echo "Generated server.properties:"\n\
-cat server.properties' > /minecraft/server/generate-properties.sh && \
-chmod +x /minecraft/server/generate-properties.sh
+# Now update the server.properties with our environment variables\n\
+update_server_properties\n\
+\n\
+echo "Starting Minecraft server with updated configuration..."\n\
+echo "Final server.properties:"\n\
+cat server.properties\n\
+echo "=========================================="\n\
+\n\
+# Start the server with proper memory settings\n\
+exec java -Xms${JAVA_MEMORY_MIN} -Xmx${JAVA_MEMORY_MAX} $JAVA_OPTS -jar paper.jar nogui' > /minecraft/server/start-server.sh && \
+chmod +x /minecraft/server/start-server.sh
 
 # Expose Minecraft server port (internal container port)
 EXPOSE 25565
@@ -64,5 +101,5 @@ ENV JAVA_OPTS="-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200
 ENV JAVA_MEMORY_MIN="1G"
 ENV JAVA_MEMORY_MAX="4G"
 
-# Start the Minecraft server
-CMD ./generate-properties.sh && java -Xms${JAVA_MEMORY_MIN} -Xmx${JAVA_MEMORY_MAX} $JAVA_OPTS -jar paper.jar nogui
+# Use the new startup script
+CMD ["./start-server.sh"]
