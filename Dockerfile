@@ -12,6 +12,20 @@ RUN PAPER_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.v
 
 RUN echo "eula=true" > eula.txt
 
+# Create script to generate server.properties
+RUN echo '#!/bin/bash\n\
+echo "# Generated server.properties from environment variables" > server.properties\n\
+env | grep -v "^_" | while read -r line; do\n\
+    if [[ $line == *"="* ]]; then\n\
+        key=$(echo "$line" | cut -d= -f1)\n\
+        value=$(echo "$line" | cut -d= -f2-)\n\
+        if [[ $key != "JAVA_OPTS" && $key != "JAVA_MEMORY_MIN" && $key != "JAVA_MEMORY_MAX" ]]; then\n\
+            echo "$(echo $key | tr [:upper:] [:lower:])=$value" >> server.properties\n\
+        fi\n\
+    fi\n\
+done' > /minecraft/server/generate-properties.sh && \
+chmod +x /minecraft/server/generate-properties.sh
+
 # Expose Minecraft server port (internal container port)
 EXPOSE 25565
 
@@ -22,5 +36,5 @@ ENV JAVA_MEMORY_MIN="1G"
 ENV JAVA_MEMORY_MAX="4G"
 
 # Start the Minecraft server
-CMD java -Xms${JAVA_MEMORY_MIN} -Xmx${JAVA_MEMORY_MAX} $JAVA_OPTS -jar paper.jar nogui
+CMD ./generate-properties.sh && java -Xms${JAVA_MEMORY_MIN} -Xmx${JAVA_MEMORY_MAX} $JAVA_OPTS -jar paper.jar nogui
 
