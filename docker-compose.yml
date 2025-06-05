@@ -10,7 +10,8 @@ services:
     environment:
       - JAVA_MEMORY_MIN=1G
       - JAVA_MEMORY_MAX=1G
-      # Server settings from server.properties
+      
+      # Minecraft server properties (these will be converted to server.properties)
       - ACCEPTS_TRANSFERS=false
       - ALLOW_FLIGHT=false
       - ALLOW_NETHER=true
@@ -61,6 +62,7 @@ services:
       - USE_NATIVE_TRANSPORT=true
       - VIEW_DISTANCE=30
       - WHITE_LIST=true
+      
     volumes:
       - ./minecraft-docker-paper/world:/minecraft/server/world
       - ./minecraft-docker-paper/world_nether:/minecraft/server/world_nether

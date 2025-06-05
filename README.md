@@ -9,6 +9,7 @@
 - [Configuration](#configuration)
   - [Memory Settings](#memory-settings)
   - [Server Properties](#server-properties)
+  - [Environment Variables](#environment-variables)
 - [Directory Structure](#directory-structure)
 - [How It Works](#how-it-works)
 - [Updating](#updating)
@@ -29,6 +30,7 @@ A Dockerized Minecraft Paper server setup that automatically fetches the latest 
 - 🔒 **Secure**: Runs as a non-root user inside the container
 - 🚀 **Optimized**: Uses Aikar's flags for optimal Java performance
 - 🔄 **Auto-restart**: Container automatically restarts unless explicitly stopped
+- ⚙️ **Dynamic Properties**: Server properties are automatically generated from environment variables
 
 ## Prerequisites
 
@@ -81,13 +83,45 @@ environment:
 
 ### Server Properties
 
-All server properties can be configured through environment variables in `docker-compose.yml`. The current configuration includes:
+All server properties can be configured through environment variables in `docker-compose.yml`. The environment variables are automatically converted to the appropriate format in `server.properties`. Here's how it works:
 
-- Port: 2515 (external) / 25565 (internal)
-- Difficulty: Hard
-- Max Players: 1000
-- View Distance: 30
-- And many more settings...
+1. Environment variables in `docker-compose.yml` are automatically converted to lowercase
+2. They are then written to `server.properties` when the container starts
+3. Any changes to environment variables require a container restart to take effect
+
+Example configuration in `docker-compose.yml`:
+```yaml
+environment:
+  - DIFFICULTY=hard
+  - MAX_PLAYERS=1000
+  - VIEW_DISTANCE=30
+  - MOTD=Welcome to my server!
+```
+
+### Environment Variables
+
+Here are some commonly used environment variables you can configure:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DIFFICULTY` | Game difficulty | hard |
+| `MAX_PLAYERS` | Maximum number of players | 1000 |
+| `VIEW_DISTANCE` | View distance in chunks | 30 |
+| `MOTD` | Message of the day | Welcome to server! |
+| `WHITE_LIST` | Enable whitelist | true |
+| `ONLINE_MODE` | Enable online mode | true |
+| `SPAWN_PROTECTION` | Spawn protection radius | 1 |
+| `GAMEMODE` | Default game mode | survival |
+| `PVP` | Enable PvP | true |
+| `LEVEL_NAME` | World name | world |
+| `LEVEL_TYPE` | World type | minecraft:normal |
+| `ENABLE_COMMAND_BLOCK` | Enable command blocks | true |
+| `SIMULATION_DISTANCE` | Simulation distance | 20 |
+| `SPAWN_MONSTERS` | Spawn monsters | true |
+| `SPAWN_ANIMALS` | Spawn animals | true |
+| `SPAWN_NPCS` | Spawn NPCs | true |
+
+For a complete list of available properties, refer to the [Minecraft Wiki](https://minecraft.fandom.com/wiki/Server.properties).
 
 ## Directory Structure
 
@@ -102,11 +136,11 @@ minecraft-docker-paper/
 ## How It Works
 
 1. **Dockerfile**:
-
    - Uses Eclipse Temurin Java 21 as the base image
    - Automatically fetches the latest PaperMC version
    - Sets up a secure, non-root user environment
    - Configures optimal JVM settings
+   - Generates server.properties from environment variables
 
 2. **docker-compose.yml**:
    - Manages container configuration

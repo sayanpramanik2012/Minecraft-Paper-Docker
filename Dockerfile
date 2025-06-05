@@ -12,18 +12,47 @@ RUN PAPER_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.v
 
 RUN echo "eula=true" > eula.txt
 
-# Create script to generate server.properties
+# Create improved script to generate server.properties
 RUN echo '#!/bin/bash\n\
 echo "# Generated server.properties from environment variables" > server.properties\n\
-env | grep -v "^_" | while read -r line; do\n\
-    if [[ $line == *"="* ]]; then\n\
-        key=$(echo "$line" | cut -d= -f1)\n\
-        value=$(echo "$line" | cut -d= -f2-)\n\
-        if [[ $key != "JAVA_OPTS" && $key != "JAVA_MEMORY_MIN" && $key != "JAVA_MEMORY_MAX" ]]; then\n\
-            echo "$(echo $key | tr [:upper:] [:lower:])=$value" >> server.properties\n\
+\n\
+# List of environment variables to exclude (Docker/Java specific)\n\
+EXCLUDE_VARS="JAVA_OPTS JAVA_MEMORY_MIN JAVA_MEMORY_MAX PATH HOSTNAME PWD HOME TERM SHLVL"\n\
+\n\
+# Function to check if variable should be excluded\n\
+should_exclude() {\n\
+    local var_name="$1"\n\
+    for exclude in $EXCLUDE_VARS; do\n\
+        if [[ "$var_name" == "$exclude" ]]; then\n\
+            return 0\n\
         fi\n\
+    done\n\
+    # Exclude variables that start with underscore or contain common Docker/system prefixes\n\
+    if [[ "$var_name" =~ ^_ ]] || [[ "$var_name" =~ ^DOCKER ]] || [[ "$var_name" =~ ^CONTAINER ]]; then\n\
+        return 0\n\
     fi\n\
-done' > /minecraft/server/generate-properties.sh && \
+    return 1\n\
+}\n\
+\n\
+# Process environment variables\n\
+env | while IFS="=" read -r key value; do\n\
+    # Skip empty lines and malformed entries\n\
+    [[ -z "$key" ]] && continue\n\
+    \n\
+    # Skip excluded variables\n\
+    if should_exclude "$key"; then\n\
+        echo "Skipping excluded variable: $key"\n\
+        continue\n\
+    fi\n\
+    \n\
+    # Convert to lowercase and write to properties file\n\
+    property_key=$(echo "$key" | tr "[:upper:]" "[:lower:]" | tr "_" "-")\n\
+    echo "Setting property: $property_key=$value"\n\
+    echo "$property_key=$value" >> server.properties\n\
+done\n\
+\n\
+echo "Generated server.properties:"\n\
+cat server.properties' > /minecraft/server/generate-properties.sh && \
 chmod +x /minecraft/server/generate-properties.sh
 
 # Expose Minecraft server port (internal container port)
@@ -37,4 +66,3 @@ ENV JAVA_MEMORY_MAX="4G"
 
 # Start the Minecraft server
 CMD ./generate-properties.sh && java -Xms${JAVA_MEMORY_MIN} -Xmx${JAVA_MEMORY_MAX} $JAVA_OPTS -jar paper.jar nogui
-
