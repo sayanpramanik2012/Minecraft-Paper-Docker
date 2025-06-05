@@ -1,71 +1,80 @@
-version: "3.8"
+version: '3.8'
 
 services:
   minecraft:
-    image: sayanpramanik/minecraft-paper:latest
-    container_name: minecraft-paper-server
+    build: .
     ports:
-      # Format: "HOST_PORT:CONTAINER_PORT"
-      - "2515:25565"
+      - "25565:25565"
     environment:
-      - JAVA_MEMORY_MIN=1G
-      - JAVA_MEMORY_MAX=1G
-      
-      # Minecraft server properties (these will be converted to server.properties)
-      - ACCEPTS_TRANSFERS=false
-      - ALLOW_FLIGHT=false
-      - ALLOW_NETHER=true
-      - BROADCAST_CONSOLE_TO_OPS=true
-      - BROADCAST_RCON_TO_OPS=true
-      - DEBUG=false
-      - DIFFICULTY=hard
-      - ENABLE_COMMAND_BLOCK=true
-      - ENABLE_JMX_MONITORING=false
-      - ENABLE_QUERY=false
-      - ENABLE_RCON=false
-      - ENABLE_STATUS=true
-      - ENFORCE_SECURE_PROFILE=true
-      - ENFORCE_WHITELIST=true
-      - ENTITY_BROADCAST_RANGE_PERCENTAGE=100
-      - FORCE_GAMEMODE=false
-      - FUNCTION_PERMISSION_LEVEL=2
-      - GAMEMODE=survival
-      - GENERATE_STRUCTURES=true
-      - HARDCORE=false
-      - HIDE_ONLINE_PLAYERS=false
-      - INITIAL_ENABLED_PACKS=vanilla
-      - LEVEL_NAME=world
-      - LEVEL_TYPE=minecraft:normal
-      - LOG_IPS=true
-      - MAX_CHAINED_NEIGHBOR_UPDATES=1000000
-      - MAX_PLAYERS=1000
-      - MAX_TICK_TIME=60000
-      - MAX_WORLD_SIZE=29999984
-      - MOTD=§l§n§4⚔️ Welcome to Brutal's Server! ⚡ §r§6Play Fair, §bStay Sharp, §aand Have a Blast! 🎮🔥§r§r\n
-      - NETWORK_COMPRESSION_THRESHOLD=256
-      - ONLINE_MODE=true
-      - OP_PERMISSION_LEVEL=4
-      - PAUSE_WHEN_EMPTY_SECONDS=-1
-      - PLAYER_IDLE_TIMEOUT=10
-      - PREVENT_PROXY_CONNECTIONS=false
-      - PVP=true
-      - QUERY_PORT=25565
-      - RATE_LIMIT=0
-      - REGION_FILE_COMPRESSION=deflate
-      - REQUIRE_RESOURCE_PACK=false
-      - RESOURCE_PACK=https://cdn.modrinth.com/data/50dA9Sha/versions/hPLOoHUN/FreshAnimations_v1.9.3.zip
-      - SERVER_PORT=25565
-      - SIMULATION_DISTANCE=20
-      - SPAWN_MONSTERS=true
-      - SPAWN_PROTECTION=1
-      - SYNC_CHUNK_WRITES=true
-      - USE_NATIVE_TRANSPORT=true
-      - VIEW_DISTANCE=30
-      - WHITE_LIST=true
-      
+      # Server Properties (exactly matching server.properties)
+      ACCEPTS_TRANSFERS: "false"
+      ALLOW_FLIGHT: "false"
+      ALLOW_NETHER: "true"
+      BROADCAST_CONSOLE_TO_OPS: "true"
+      BROADCAST_RCON_TO_OPS: "true"
+      BUG_REPORT_LINK: ""
+      DEBUG: "false"
+      DIFFICULTY: "easy"
+      ENABLE_COMMAND_BLOCK: "false"
+      ENABLE_JMX_MONITORING: "false"
+      ENABLE_QUERY: "false"
+      ENABLE_RCON: "false"
+      ENABLE_STATUS: "true"
+      ENFORCE_SECURE_PROFILE: "true"
+      ENFORCE_WHITELIST: "false"
+      ENTITY_BROADCAST_RANGE_PERCENTAGE: "100"
+      FORCE_GAMEMODE: "false"
+      FUNCTION_PERMISSION_LEVEL: "2"
+      GAMEMODE: "survival"
+      GENERATE_STRUCTURES: "true"
+      GENERATOR_SETTINGS: "{}"
+      HARDCORE: "false"
+      HIDE_ONLINE_PLAYERS: "false"
+      INITIAL_DISABLED_PACKS: ""
+      INITIAL_ENABLED_PACKS: "vanilla"
+      LEVEL_NAME: "world"
+      LEVEL_SEED: ""
+      LEVEL_TYPE: "minecraft:normal"
+      LOG_IPS: "true"
+      MAX_CHAINED_NEIGHBOR_UPDATES: "1000000"
+      MAX_PLAYERS: "20"
+      MAX_TICK_TIME: "60000"
+      MAX_WORLD_SIZE: "29999984"
+      MOTD: "A Minecraft Server"
+      NETWORK_COMPRESSION_THRESHOLD: "256"
+      ONLINE_MODE: "true"
+      OP_PERMISSION_LEVEL: "4"
+      PAUSE_WHEN_EMPTY_SECONDS: "-1"
+      PLAYER_IDLE_TIMEOUT: "0"
+      PREVENT_PROXY_CONNECTIONS: "false"
+      PVP: "true"
+      QUERY_PORT: "25565"
+      RATE_LIMIT: "0"
+      RCON_PASSWORD: ""
+      RCON_PORT: "25575"
+      REGION_FILE_COMPRESSION: "deflate"
+      REQUIRE_RESOURCE_PACK: "false"
+      RESOURCE_PACK: ""
+      RESOURCE_PACK_ID: ""
+      RESOURCE_PACK_PROMPT: ""
+      RESOURCE_PACK_SHA1: ""
+      SERVER_IP: ""
+      SERVER_PORT: "25565"
+      SIMULATION_DISTANCE: "10"
+      SPAWN_MONSTERS: "true"
+      SPAWN_PROTECTION: "16"
+      SYNC_CHUNK_WRITES: "true"
+      TEXT_FILTERING_CONFIG: ""
+      TEXT_FILTERING_VERSION: "0"
+      USE_NATIVE_TRANSPORT: "true"
+      VIEW_DISTANCE: "10"
+      WHITE_LIST: "false"
+
+      # Java Memory Settings (separate from server.properties)
+      JAVA_MEMORY_MIN: "1G"
+      JAVA_MEMORY_MAX: "4G"
     volumes:
-      - ./minecraft-docker-paper/world:/minecraft/server/world
-      - ./minecraft-docker-paper/world_nether:/minecraft/server/world_nether
-      - ./minecraft-docker-paper/world_the_end:/minecraft/server/world_the_end
-      - ./minecraft-docker-paper/plugins:/minecraft/server/plugins
+      - data:/minecraft/server
     restart: unless-stopped
+volumes:
+  data:

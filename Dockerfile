@@ -34,7 +34,7 @@ update_server_properties() {\n\
     fi\n\
     \n\
     # Process environment variables\n\
-    env | while IFS="=" read -r key value; do\n\
+    while IFS="=" read -r key value || [ -n "$key" ]; do\n\
         # Skip empty lines and malformed entries\n\
         [[ -z "$key" ]] && continue\n\
         \n\
@@ -59,6 +59,9 @@ update_server_properties() {\n\
         # Convert to lowercase with hyphens\n\
         property_key=$(echo "$key" | tr "[:upper:]" "[:lower:]" | tr "_" "-")\n\
         \n\
+        # Escape special characters in value\n\
+        value=$(echo "$value" | sed "s/[\/&]/\\\\&/g")\n\
+        \n\
         # Update or add the property\n\
         if grep -q "^${property_key}=" "$temp_props"; then\n\
             # Property exists, update it\n\
@@ -69,7 +72,7 @@ update_server_properties() {\n\
             echo "${property_key}=${value}" >> "$temp_props"\n\
             echo "Added: ${property_key}=${value}"\n\
         fi\n\
-    done\n\
+    done < <(env)\n\
     \n\
     # Replace the original file\n\
     mv "$temp_props" "server.properties"\n\
