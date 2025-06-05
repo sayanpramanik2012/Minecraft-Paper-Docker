@@ -31,10 +31,10 @@ jobs:
       - name: Get Paper version
         id: paper_version
         run: |
-          # Use provided version or get latest stable
           if [ -n "${{ github.event.inputs.version }}" ]; then
             PAPER_VERSION="${{ github.event.inputs.version }}"
           else
+            # Fetch latest stable version
             PAPER_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.versions[] | select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))' | sort -V | tail -n 1)
           fi
           echo "PAPER_VERSION=${PAPER_VERSION}" >> $GITHUB_ENV
@@ -42,26 +42,28 @@ jobs:
       - name: Get existing tags
         id: get_tags
         run: |
-          # Get tags from Docker Hub and extract version numbers
           TAGS=$(curl -s "https://hub.docker.com/v2/repositories/sayanpramanik/minecraft-paper/tags?page_size=100" | jq -r '.results[].name' | grep -E "^${PAPER_VERSION}-v[0-9]+$" || echo "")
-          # Store tags as a comma-separated list to avoid issues with multiline values
-          echo "TAGS=$(echo ${TAGS} | tr '\n' ',')" >> $GITHUB_ENV
+          # Remove trailing newline and convert to comma-separated
+          TAGS=$(echo "$TAGS" | tr '\n' ',' | sed 's/,$//')
+          echo "TAGS=${TAGS}" >> $GITHUB_ENV
 
       - name: Determine version number
         id: version_number
         run: |
-          # If no tags exist for this version, start with v1
           if [ -z "$TAGS" ]; then
+            # No tags exist - start from 1
             VERSION_SUFFIX=1
           else
-            # Extract all version numbers, sort them numerically, and get the highest
-            VERSION_SUFFIX=$(echo "$TAGS" | tr ',' '\n' | grep -o "v[0-9]*$" | sed 's/v//' | sort -V | tail -n 1)
-            # Ensure we have a valid number
-            if [ -z "$VERSION_SUFFIX" ]; then
+            # Extract suffix numbers (vXX) from all tags
+            VERSION_NUMBERS=$(echo "$TAGS" | tr ',' '\n' | grep -o "v[0-9]*$" | sed 's/v//')
+            
+            if [ -z "$VERSION_NUMBERS" ]; then
               VERSION_SUFFIX=1
             else
-              # Convert to integer and increment
-              VERSION_SUFFIX=$((10#$VERSION_SUFFIX + 1))
+              # Find highest existing version number
+              MAX_VERSION=$(echo "$VERSION_NUMBERS" | sort -n | tail -n 1)
+              # Increment by 1
+              VERSION_SUFFIX=$((MAX_VERSION + 1))
             fi
           fi
           echo "VERSION_SUFFIX=${VERSION_SUFFIX}" >> $GITHUB_ENV
