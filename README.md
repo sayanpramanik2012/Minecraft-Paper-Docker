@@ -3,6 +3,8 @@
 ## Table of Contents
 
 - [Features](#features)
+- [Versioning](#versioning)
+- [Automated Builds](#automated-builds)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Quick Start with Docker Compose](#quick-start-with-docker-compose)
@@ -32,11 +34,28 @@ A Dockerized Minecraft Paper server setup that automatically fetches the latest 
 - 🔄 **Auto-restart**: Container automatically restarts unless explicitly stopped
 - ⚙️ **Dynamic Properties**: Server properties are automatically generated from environment variables
 
+## Versioning
+
+The Docker images follow a specific versioning scheme:
+- Format: `{paper-version}-v{build-number}`
+- Example: `1.20.4-v1`, `1.20.4-v2`, etc.
+- The `latest` tag always points to the most recent build
+- Images are automatically built for both `linux/amd64` and `linux/arm64` platforms
+
+## Automated Builds
+
+This project uses GitHub Actions to automatically:
+- Build and push Docker images on every push to main branch
+- Support manual triggers for specific Paper versions
+- Automatically detect and use the latest stable Paper version
+- Increment build numbers for each new build of the same Paper version
+- Push images to Docker Hub with proper versioning
+
 ## Prerequisites
 
 - Docker
 - Docker Compose
-- At least 10GB of RAM recommended for the host system
+- At least 1GB of RAM recommended for the host system
 
 ## Quick Start
 
@@ -77,8 +96,8 @@ The server is configured to use 4GB minimum and 10GB maximum RAM by default. You
 
 ```yaml
 environment:
-  - JAVA_MEMORY_MIN=4G
-  - JAVA_MEMORY_MAX=10G
+  - JAVA_MEMORY_MIN=1G
+  - JAVA_MEMORY_MAX=1G
 ```
 
 ### Server Properties
